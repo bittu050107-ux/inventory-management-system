@@ -1,0 +1,26 @@
+# ─────────────────────────────────────────────────────────────
+# Product Service — Python Dependencies
+# ─────────────────────────────────────────────────────────────
+# Install with: pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────
+
+# Web framework
+fastapi==0.111.0
+
+# ASGI server
+uvicorn[standard]==0.29.0
+
+# Environment variables from root .env
+python-dotenv==1.0.1
+
+# Database ORM
+sqlalchemy==2.0.30
+
+# PostgreSQL driver
+psycopg2-binary==2.9.9
+
+# JWT token verification (read claims, no local signing required)
+python-jose[cryptography]==3.3.0
+
+# Data validation and DTOs
+pydantic[email]==2.7.1

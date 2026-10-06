@@ -1,0 +1,153 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────
+# Docker Compose - Inventory Management System
+# ─────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL Database ────────────────────────────────────
+  postgres:
+    image: postgres:16
+    container_name: inventory-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: inventory_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Auth Service ──────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./backend/services/auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/inventory_db
+      - ADMIN_SEED_EMAIL=${ADMIN_SEED_EMAIL}
+      - ADMIN_SEED_PASSWORD=${ADMIN_SEED_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── API Gateway ───────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - API_GATEWAY_URL=${API_GATEWAY_URL}
+      - AUTH_SERVICE_URL=http://auth-service:8001
+      - FRONTEND_URL=${FRONTEND_URL}
+    depends_on:
+      - auth-service
+    restart: unless-stopped
+
+  # ── Product Service ───────────────────────────────────────
+  product-service:
+    build:
+      context: ./backend/services/product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/inventory_db
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Inventory Service ─────────────────────────────────────
+  inventory-service:
+    build:
+      context: ./backend/services/inventory-service
+      dockerfile: Dockerfile
+    container_name: inventory-service
+    ports:
+      - "8004:8004"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/inventory_db
+      - PRODUCT_SERVICE_URL=http://product-service:8003
+    depends_on:
+      postgres:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    restart: unless-stopped
+
+  # ── Order Service ─────────────────────────────────────────
+  order-service:
+    build:
+      context: ./backend/services/order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8005:8005"
+    env_file:
+      - .env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/inventory_db
+      - PRODUCT_SERVICE_URL=http://product-service:8003
+      - INVENTORY_SERVICE_URL=http://inventory-service:8004
+    depends_on:
+      postgres:
+        condition: service_healthy
+      inventory-service:
+        condition: service_started
+    restart: unless-stopped
+
+  # ── React Frontend ─────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: inventory-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+  # ── Future: user-service (port 8002) — coming soon ────────
+
+volumes:
+  postgres_data:
+

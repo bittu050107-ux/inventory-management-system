@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────
+# Auth Service — Python Dependencies
+# ─────────────────────────────────────────────────────────────
+# Install with: pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────
+
+# Web framework — the core FastAPI server
+fastapi==0.111.0
+
+# ASGI server — runs the FastAPI app (use --reload for development)
+uvicorn[standard]==0.29.0
+
+# Environment variable loading — reads from root .env file
+python-dotenv==1.0.1
+
+# ORM — maps Python classes to database tables
+# (configured and ready; models added in next phase)
+sqlalchemy==2.0.30
+
+# PostgreSQL driver — connects SQLAlchemy to PostgreSQL
+# "binary" variant includes pre-compiled C extensions (faster)
+psycopg2-binary==2.9.9
+
+# JWT library — creates and verifies JSON Web Tokens
+# jose = "JavaScript Object Signing and Encryption"
+python-jose[cryptography]==3.3.0
+
+# Password hashing utilities — context manager for bcrypt
+# (wired in security.py when plain-text is replaced with hashes)
+passlib[bcrypt]==1.7.4
+
+# bcrypt — actual hashing algorithm used by passlib
+bcrypt==4.1.3
+
+# Pydantic with email validation support
+# EmailStr requires this extra — used in LoginRequest DTO
+pydantic[email]==2.7.1

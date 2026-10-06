@@ -1,0 +1,20 @@
+# ─────────────────────────────────────────────────────────────
+# API Gateway — Python Dependencies
+# ─────────────────────────────────────────────────────────────
+# Install with: pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────
+
+# Web framework — API Gateway reverse proxy server
+fastapi==0.111.0
+
+# ASGI server — runs the FastAPI app
+uvicorn[standard]==0.29.0
+
+# HTTP client — asynchronous downstream service communication
+httpx==0.28.1
+
+# Environment variable loading — reads from root .env file
+python-dotenv==1.0.1
+
+# Pydantic with email validation support
+pydantic[email]==2.7.1
